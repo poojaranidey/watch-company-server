@@ -22,6 +22,7 @@ async function run() {
         const productCollection = database.collection('products');
         const orderCollection = database.collection('myorder');
         const reviewCollection = database.collection('review');
+        const usersCollection = database.collection('users');
 
         // get products api
         app.get('/products', async (req, res) => {
@@ -37,7 +38,7 @@ async function run() {
             const result = await productCollection.findOne({
                 _id: ObjectId(serviceId),
             });
-            res.json(result);
+            res.send(result);
         });
 
         // POST API
@@ -45,7 +46,7 @@ async function run() {
             const service = req.body;
             console.log('hit the post api', service)
             const result = await productCollection.insertOne(service);
-            console.log(result);
+
             res.json(result);
         });
 
@@ -102,10 +103,43 @@ async function run() {
             console.log('hit the post api', service)
 
             const result = await reviewCollection.insertOne(service);
-            console.log(result);
+
             res.json(result);
 
         });
+
+
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        })
+
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            console.log(result);
+            res.json(result);
+        });
+
+
+        app.put('/users/admin', async (req, res) => {
+            const user = req.body;
+            console.log('put', user);
+
+            const filter = { email: user.email };
+            const updateDoc = { $set: { role: 'admin' } };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.json(result);
+
+
+        })
+
 
 
     }
